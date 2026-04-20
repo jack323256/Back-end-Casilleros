@@ -45,7 +45,7 @@ class Prestamo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     inventario_id = db.Column(db.Integer, db.ForeignKey('inventario.id'), nullable=False)
     
-    # CORRECCIÓN ENUM PARA POSTGRES
+    # Agregado name para Postgres
     tipo_prestamo = db.Column(
         db.Enum('docente', 'alumno', 'externo', name='tipo_prestamo_enum'), 
         nullable=False
@@ -56,7 +56,7 @@ class Prestamo(db.Model):
     fecha_prestamo = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_devolucion = db.Column(db.DateTime)
 
-    # CORRECCIÓN ENUM PARA POSTGRES
+    # Agregado name para Postgres
     estatus = db.Column(
         db.Enum('activo', 'devuelto', 'cancelado', name='estatus_prestamo_enum'), 
         default='activo'
@@ -94,7 +94,7 @@ class SesionClase(db.Model):
     fecha_inicio = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_fin = db.Column(db.DateTime)
 
-    # CORRECCIÓN ENUM PARA POSTGRES
+    # Agregado name para Postgres
     estatus = db.Column(
         db.Enum('activa', 'cerrada', name='estatus_sesion_enum'), 
         default='activa'
@@ -127,7 +127,7 @@ class TarjetaPrestamo(db.Model):
     responsable_actual = db.Column(db.String(150), nullable=False)
     ubicacion_trabajo = db.Column(db.String(100))
 
-    # CORRECCIÓN ENUM PARA POSTGRES
+    # Agregado name para Postgres
     estatus = db.Column(
         db.Enum('activa', 'completa', name='estatus_tarjeta_enum'), 
         default='activa'
@@ -148,13 +148,14 @@ class TarjetaMaterial(db.Model):
     inventario_id = db.Column(db.Integer, db.ForeignKey('inventario.id'), nullable=False)
     cantidad = db.Column(db.Integer, nullable=False)
 
-    # CORRECCIÓN ENUM PARA POSTGRES
+    # Agregado name para Postgres
     estado_salida = db.Column(
         db.Enum('bueno', 'regular', 'malo', name='estado_material_enum'), 
         nullable=False
     )
-    # Se usa el mismo nombre de enum para reutilizar el tipo en Postgres
-    estado_entrada = db.Column(db.Enum('bueno', 'regular', 'malo', name='estado_material_enum'))
+    estado_entrada = db.Column(
+        db.Enum('bueno', 'regular', 'malo', name='estado_material_enum')
+    )
 
     devuelto = db.Column(db.Boolean, default=False)
     fecha_salida = db.Column(db.DateTime, default=datetime.utcnow)
@@ -172,7 +173,7 @@ class BitacoraManto(db.Model):
     tabla = db.Column(db.String(50), nullable=False)
     registro_id = db.Column(db.Integer, nullable=False)
 
-    # CORRECCIÓN ENUM PARA POSTGRES
+    # Agregado name para Postgres
     accion = db.Column(
         db.Enum('INSERT', 'UPDATE', 'DELETE', name='accion_bitacora_enum'), 
         nullable=False
@@ -220,7 +221,7 @@ class Mantenimiento(db.Model):
             'laboratorio': self.laboratorio,
             'especialista': self.especialista,
             'area': self.area,
-            'notas': self.notas,  # <-- CORREGIDO: Antes tenías db.Column aquí
+            'notas': self.notas,  # <--- CORREGIDO: Eliminado db.Column que causaba el error
             'fecha': self.fecha_registro.strftime('%d/%m/%Y %H:%M'),
             'fotos': {
                 'actual': f"/uploads/{self.foto_actual}" if self.foto_actual else None,
