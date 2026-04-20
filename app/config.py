@@ -1,16 +1,23 @@
 import os
 
 class Config:
-    SECRET_KEY = 'mi_clave_secreta_super_segura_cambia_esto'
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'mi_clave_local_segura')
+    #SECRET_KEY = 'mi_clave_secreta_super_segura_cambia_esto'
 
     # 🔒 Base de datos EXISTENTE (casilleros)
-    SQLALCHEMY_DATABASE_URI = (
-        'mysql+pymysql://root:1234@localhost:3306/casilleros_db'
-    )
+    #SQLALCHEMY_DATABASE_URI = (
+    #    'mysql+pymysql://root:1234@localhost:3306/casilleros_db'
+    #)
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
     # 🆕 Base de datos MANTO (NUEVA)
+    #SQLALCHEMY_BINDS = {
+    #    'manto': 'mysql+pymysql://root:1234@localhost:3306/manto'
+    #}
+
     SQLALCHEMY_BINDS = {
-        'manto': 'mysql+pymysql://root:1234@localhost:3306/manto'
+        'manto': os.environ.get('DATABASE_URL_MANTO')
     }
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
