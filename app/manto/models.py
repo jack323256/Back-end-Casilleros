@@ -1,7 +1,6 @@
 from datetime import datetime
 from app import db
 
-
 # =========================
 # INVENTARIO
 # =========================
@@ -18,10 +17,7 @@ class Inventario(db.Model):
     cantidad_disponible = db.Column(db.Integer, nullable=False, default=0)
     ubicacion = db.Column(db.String(100))
     activo = db.Column(db.Boolean, default=True)
-
-    # ← NUEVO CAMPO PARA IMAGEN
-    imagen = db.Column(db.String(255), nullable=True)  # Solo el nombre del archivo
-
+    imagen = db.Column(db.String(255), nullable=True) 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -36,47 +32,38 @@ class Inventario(db.Model):
             'ubicacion': self.ubicacion,
             'activo': self.activo,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            # ← URL COMPLETA PARA QUE EL FRONTEND LA USE DIRECTAMENTE
             'imagen_url': f"/uploads/{self.imagen}" if self.imagen else None
         }
 
-
 # =========================
-# PRÉSTAMOS (HISTÓRICO FINAL)
+# PRÉSTAMOS
 # =========================
 class Prestamo(db.Model):
     __bind_key__ = 'manto'
     __tablename__ = 'prestamos'
 
     id = db.Column(db.Integer, primary_key=True)
-
-    inventario_id = db.Column(
-        db.Integer,
-        db.ForeignKey('inventario.id'),
-        nullable=False
-    )
-
+    inventario_id = db.Column(db.Integer, db.ForeignKey('inventario.id'), nullable=False)
+    
+    # CORRECCIÓN ENUM PARA POSTGRES
     tipo_prestamo = db.Column(
-        db.Enum('docente', 'alumno', 'externo'),
+        db.Enum('docente', 'alumno', 'externo', name='tipo_prestamo_enum'), 
         nullable=False
     )
 
     solicitante = db.Column(db.String(150), nullable=False)
     referencia = db.Column(db.String(50))
-
     fecha_prestamo = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_devolucion = db.Column(db.DateTime)
 
+    # CORRECCIÓN ENUM PARA POSTGRES
     estatus = db.Column(
-        db.Enum('activo', 'devuelto', 'cancelado'),
+        db.Enum('activo', 'devuelto', 'cancelado', name='estatus_prestamo_enum'), 
         default='activo'
     )
 
     observaciones = db.Column(db.Text)
-
     inventario = db.relationship('Inventario')
-
-
 
     def to_dict(self):
         return {
@@ -87,17 +74,10 @@ class Prestamo(db.Model):
             'solicitante': self.solicitante,
             'referencia': self.referencia,
             'fecha_prestamo': self.fecha_prestamo.isoformat(),
-            'fecha_devolucion': (
-                self.fecha_devolucion.isoformat()
-                if self.fecha_devolucion else None
-            ),
+            'fecha_devolucion': self.fecha_devolucion.isoformat() if self.fecha_devolucion else None,
             'estatus': self.estatus,
-            'observaciones': self.observaciones,
-          
+            'observaciones': self.observaciones
         }
-
-
-
 
 # =========================
 # SESIONES DE CLASE
@@ -107,23 +87,21 @@ class SesionClase(db.Model):
     __tablename__ = 'sesiones_clase'
 
     id = db.Column(db.Integer, primary_key=True)
-
     docente = db.Column(db.String(150), nullable=False)
     materia = db.Column(db.String(150))
     laboratorio = db.Column(db.String(100))
     grupo = db.Column(db.String(50))
-
     fecha_inicio = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_fin = db.Column(db.DateTime)
 
+    # CORRECCIÓN ENUM PARA POSTGRES
     estatus = db.Column(
-        db.Enum('activa', 'cerrada'),
+        db.Enum('activa', 'cerrada', name='estatus_sesion_enum'), 
         default='activa'
     )
 
     tarjetas = db.relationship('TarjetaPrestamo', backref='sesion')
 
-    # ← NUEVO: Método para serializar correctamente
     def to_dict(self):
         return {
             'id': self.id,
@@ -134,38 +112,29 @@ class SesionClase(db.Model):
             'fecha_inicio': self.fecha_inicio.isoformat() if self.fecha_inicio else None,
             'fecha_fin': self.fecha_fin.isoformat() if self.fecha_fin else None,
             'estatus': self.estatus,
-            # Opcional: número de tarjetas activas (útil para dashboard)
             'tarjetas_activas': len([t for t in self.tarjetas if t.estatus == 'activa'])
         }
 
-
 # =========================
-# TARJETAS DE PRÉSTAMO (VIVAS)
+# TARJETAS DE PRÉSTAMO
 # =========================
 class TarjetaPrestamo(db.Model):
     __bind_key__ = 'manto'
     __tablename__ = 'tarjetas_prestamo'
 
     id = db.Column(db.Integer, primary_key=True)
-
     sesion_id = db.Column(db.Integer, db.ForeignKey('sesiones_clase.id'), nullable=True)
-
     responsable_actual = db.Column(db.String(150), nullable=False)
     ubicacion_trabajo = db.Column(db.String(100))
 
+    # CORRECCIÓN ENUM PARA POSTGRES
     estatus = db.Column(
-        db.Enum('activa', 'completa'),
+        db.Enum('activa', 'completa', name='estatus_tarjeta_enum'), 
         default='activa'
     )
 
     creada_en = db.Column(db.DateTime, default=datetime.utcnow)
-
-    materiales = db.relationship(
-        'TarjetaMaterial',
-        backref='tarjeta',
-        cascade='all, delete-orphan'
-    )
-
+    materiales = db.relationship('TarjetaMaterial', backref='tarjeta', cascade='all, delete-orphan')
 
 # =========================
 # MATERIAL DENTRO DE TARJETA
@@ -175,37 +144,22 @@ class TarjetaMaterial(db.Model):
     __tablename__ = 'tarjeta_material'
 
     id = db.Column(db.Integer, primary_key=True)
-
-    tarjeta_id = db.Column(
-        db.Integer,
-        db.ForeignKey('tarjetas_prestamo.id'),
-        nullable=False
-    )
-
-    inventario_id = db.Column(
-        db.Integer,
-        db.ForeignKey('inventario.id'),
-        nullable=False
-    )
-
+    tarjeta_id = db.Column(db.Integer, db.ForeignKey('tarjetas_prestamo.id'), nullable=False)
+    inventario_id = db.Column(db.Integer, db.ForeignKey('inventario.id'), nullable=False)
     cantidad = db.Column(db.Integer, nullable=False)
 
+    # CORRECCIÓN ENUM PARA POSTGRES
     estado_salida = db.Column(
-        db.Enum('bueno', 'regular', 'malo'),
+        db.Enum('bueno', 'regular', 'malo', name='estado_material_enum'), 
         nullable=False
     )
-
-    estado_entrada = db.Column(
-        db.Enum('bueno', 'regular', 'malo')
-    )
+    # Se usa el mismo nombre de enum para reutilizar el tipo en Postgres
+    estado_entrada = db.Column(db.Enum('bueno', 'regular', 'malo', name='estado_material_enum'))
 
     devuelto = db.Column(db.Boolean, default=False)
     fecha_salida = db.Column(db.DateTime, default=datetime.utcnow)
     fecha_entrada = db.Column(db.DateTime)
-
     inventario = db.relationship('Inventario')
-
-
 
 # =========================
 # BITÁCORA MANTO
@@ -218,8 +172,9 @@ class BitacoraManto(db.Model):
     tabla = db.Column(db.String(50), nullable=False)
     registro_id = db.Column(db.Integer, nullable=False)
 
+    # CORRECCIÓN ENUM PARA POSTGRES
     accion = db.Column(
-        db.Enum('INSERT', 'UPDATE', 'DELETE'),
+        db.Enum('INSERT', 'UPDATE', 'DELETE', name='accion_bitacora_enum'), 
         nullable=False
     )
 
@@ -238,8 +193,6 @@ class BitacoraManto(db.Model):
             'descripcion': self.descripcion
         }
 
-
-
 # =========================
 # EVIDENCIAS DE MANTENIMIENTO
 # =========================
@@ -254,7 +207,6 @@ class Mantenimiento(db.Model):
     area = db.Column(db.String(100), default='Mantenimiento Industrial')
     notas = db.Column(db.Text, nullable=True)
     
-    # Fotos
     foto_actual = db.Column(db.String(255))
     foto_proceso = db.Column(db.String(255))
     foto_completado = db.Column(db.String(255))
@@ -268,7 +220,7 @@ class Mantenimiento(db.Model):
             'laboratorio': self.laboratorio,
             'especialista': self.especialista,
             'area': self.area,
-            'notas': db.Column(db.Text, nullable=True),
+            'notas': self.notas,  # <-- CORREGIDO: Antes tenías db.Column aquí
             'fecha': self.fecha_registro.strftime('%d/%m/%Y %H:%M'),
             'fotos': {
                 'actual': f"/uploads/{self.foto_actual}" if self.foto_actual else None,
