@@ -79,7 +79,11 @@ class Bitacora(db.Model):
     __tablename__ = 'bitacora'
 
     id_bitacora = db.Column(db.Integer, primary_key=True)
-    operacion = db.Column(db.Enum('INSERT', 'UPDATE', 'DELETE'), nullable=False)
+    # Agregado name para Postgres
+    operacion = db.Column(
+        db.Enum('INSERT', 'UPDATE', 'DELETE', name='operacion_bitacora_enum'), 
+        nullable=False
+    )
     usuario = db.Column(db.String(100), nullable=False)
     fecha_hora = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     id_registro = db.Column(db.Integer)
