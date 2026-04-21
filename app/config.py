@@ -1,16 +1,17 @@
 import os
 
 class Config:
+    # Nota: Dejaremos tu contraseña aquí solo por hoy para asegurar que arranque. 
+    # Luego te enseñaré a ocultarla por seguridad.
     SECRET_KEY = 'mi_clave_secreta_super_segura_cambia_esto'
 
     # 🔒 Base de datos EXISTENTE (casilleros)
-# 🔒 Base de datos EXISTENTE (casilleros)
-    SQLALCHEMY_DATABASE_URI = 'postgresql://neondb_owner:npg_TG6rSIHEAZd7@ep-proud-violet-anka3fy4-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require'
+    # Fíjate que eliminé "-pooler" de la URL
+    SQLALCHEMY_DATABASE_URI = 'postgresql://neondb_owner:npg_TG6rSIHEAZd7@ep-proud-violet-anka3fy4.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require'
 
     # 🆕 Base de datos MANTO (NUEVA)
-    # IMPORTANTE: Debe ser un diccionario con una clave, por ejemplo 'manto'
     SQLALCHEMY_BINDS = {
-        'manto': 'postgresql://neondb_owner:npg_TG6rSIHEAZd7@ep-proud-violet-anka3fy4-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require'
+        'manto': 'postgresql://neondb_owner:npg_TG6rSIHEAZd7@ep-proud-violet-anka3fy4.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require'
     }
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -26,9 +27,7 @@ class Config:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     UPLOAD_FOLDER = os.path.join(BASE_DIR, '..', 'uploads')
     
-    # IMPORTANTE: Asegúrate de que la ruta exista al iniciar
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
 
-    # Añade esto para evitar errores de archivos pesados de cámara
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB máximo
