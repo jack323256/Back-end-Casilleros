@@ -15,7 +15,7 @@ import cloudinary.uploader
 
 # === CONFIGURACIÓN DE CLOUDINARY ===
 cloudinary.config( 
-  cloud_name = "jack32", 
+  cloud_name = "dttnkpreo", 
   api_key = "921913451556512", 
   api_secret = "QOteKxbVL_vtEzdimM1QSy8zUp0",
   secure = True
