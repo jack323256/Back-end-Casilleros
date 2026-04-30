@@ -9,37 +9,29 @@ from datetime import datetime
 import traceback  # <- NUEVO: Para rastrear errores ocultos
 
 # Importación para el controlador API de Imágenes 
-import requests
-import base64
+import cloudinary
+import cloudinary.uploader
 #-----------------------------
 
-# === CONFIGURACIÓN DE IMGBB ===
-IMGBB_API_KEY = 'ea756c7dfd78b110f2bba04e1f22034b'
+# === CONFIGURACIÓN DE CLOUDINARY ===
+cloudinary.config( 
+  cloud_name = "Jack32", 
+  api_key = "921913451556512", 
+  api_secret = "QOteKxbVL_vtEzdimM1QSy8zUp0",
+  secure = True
+)
 
-def subir_a_imgbb(file):
-    url = "https://api.imgbb.com/1/upload"
+def subir_a_nube(file):
     try:
-        print("Preparando imagen para ImgBB...", flush=True)
-        image_data = file.read()
-        b64_image = base64.b64encode(image_data).decode('utf-8')
+        print(f"Subiendo {file.filename} a Cloudinary...", flush=True)
+        # Cloudinary hace toda la magia con esta simple línea
+        respuesta = cloudinary.uploader.upload(file)
         
-        payload = {
-            "key": IMGBB_API_KEY,
-            "image": b64_image
-        }
+        print("¡Éxito! Cloudinary aceptó la foto.", flush=True)
+        return respuesta['secure_url'] # Nos devuelve el link seguro (https)
         
-        print("Enviando a ImgBB...", flush=True)
-        respuesta = requests.post(url, data=payload)
-        
-        if respuesta.status_code == 200:
-            print("¡ImgBB aceptó la foto!", flush=True)
-            return respuesta.json()['data']['url']
-        else:
-            print(f"🚨 IMGBB RECHAZÓ LA FOTO. Razón: {respuesta.text}", flush=True)
-            return None
-            
     except Exception as e:
-        print(f"🚨 ERROR FATAL DE PYTHON EN IMGBB: {str(e)}", flush=True)
+        print(f"🚨 ERROR EN CLOUDINARY: {str(e)}", flush=True)
         return None
 # ==============================
 
