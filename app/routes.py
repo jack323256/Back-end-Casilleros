@@ -17,22 +17,29 @@ IMGBB_API_KEY = 'ea756c7dfd78b110f2bba04e1f22034b'
 
 def subir_a_imgbb(file):
     url = "https://api.imgbb.com/1/upload"
-    # Leer la imagen y convertirla al formato que pide ImgBB
-    image_data = file.read()
-    b64_image = base64.b64encode(image_data).decode('utf-8')
-    
-    payload = {
-        "key": IMGBB_API_KEY,
-        "image": b64_image
-    }
-    
-    # Enviar la foto a ImgBB
-    respuesta = requests.post(url, data=payload)
-    
-    if respuesta.status_code == 200:
-        # Si fue exitoso, ImgBB nos devuelve el Link de la foto
-        return respuesta.json()['data']['url']
-    else:
+    try:
+        # 1. Leemos la imagen de forma segura y la convertimos
+        image_data = file.read()
+        b64_image = base64.b64encode(image_data).decode('utf-8')
+        
+        payload = {
+            "key": IMGBB_API_KEY,
+            "image": b64_image
+        }
+        
+        # 2. Enviamos la petición
+        respuesta = requests.post(url, data=payload)
+        
+        if respuesta.status_code == 200:
+            return respuesta.json()['data']['url']
+        else:
+            # SI IMGBB FALLA, ESTO SALDRÁ EN LOS LOGS DE RENDER
+            print(f"❌ ImgBB rechazó la foto. Código: {respuesta.status_code}, Detalle: {respuesta.text}", flush=True)
+            return None
+            
+    except Exception as e:
+        # SI PYTHON FALLA, ESTO SALDRÁ EN LOS LOGS DE RENDER
+        print(f"❌ Error interno en subir_a_imgbb: {str(e)}", flush=True)
         return None
 # ==============================
 
