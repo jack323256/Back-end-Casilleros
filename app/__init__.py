@@ -19,13 +19,17 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # === LA LÍNEA MÁGICA QUE EVITA EL ERROR 500 ===
+    app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
     db.init_app(app)
     CORS(app)
     api.init_app(app)
 
-    # Crear carpeta uploads si no existe
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
+    # Crear carpeta uploads si no existe (aunque ya no la usemos para guardar, 
+    # es buena práctica dejarla por si tienes el send_from_directory)
+    if not os.path.exists(app.config.get('UPLOAD_FOLDER', 'uploads')):
+        os.makedirs(app.config.get('UPLOAD_FOLDER', 'uploads'))
 
     # Importar rutas y modelos
     from .models import Assignment, Bitacora
