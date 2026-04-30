@@ -7,6 +7,36 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 
+# Importación para el controlador API de Imágenes 
+import requests
+import base64
+#-----------------------------
+
+# === CONFIGURACIÓN DE IMGBB ===
+IMGBB_API_KEY = 'ea756c7dfd78b110f2bba04e1f22034b'
+
+def subir_a_imgbb(file):
+    url = "https://api.imgbb.com/1/upload"
+    # Leer la imagen y convertirla al formato que pide ImgBB
+    image_data = file.read()
+    b64_image = base64.b64encode(image_data).decode('utf-8')
+    
+    payload = {
+        "key": IMGBB_API_KEY,
+        "image": b64_image
+    }
+    
+    # Enviar la foto a ImgBB
+    respuesta = requests.post(url, data=payload)
+    
+    if respuesta.status_code == 200:
+        # Si fue exitoso, ImgBB nos devuelve el Link de la foto
+        return respuesta.json()['data']['url']
+    else:
+        return None
+# ==============================
+
+
 # Namespace para las operaciones REST
 bp = Namespace('assignments', description='Operaciones sobre asignaciones de casilleros')
 
@@ -89,7 +119,6 @@ class AssignmentList(Resource):
             except ValueError:
                 bp.abort(400, 'Formato de fecha inválido (debe ser YYYY-MM-DD)')
 
-        # Creación del nuevo registro con el campo periodo incluido
         assignment = Assignment(
             alumno=data['alumno'].strip(),
             cuatrimestre=cuatrimestre,
@@ -98,22 +127,24 @@ class AssignmentList(Resource):
             celular=data['celular'].strip(),
             matricula=data['matricula'].strip(),
             numero_casillero=numero_casillero,
-            periodo=data['periodo'].strip(),  # ← AÑADIDO
+            periodo=data['periodo'].strip(),
             pagado=pagado,
             en_uso=en_uso,
             fecha_prestamo=fecha_prestamo,
             notas=data.get('notas', '').strip()
         )
 
-        # Manejo de fotos
+        # === CORRECCIÓN AQUÍ: Manejo de fotos con ImgBB para el POST ===
         for field in ['foto_credencial', 'foto_casillero']:
             if field in request.files:
                 file = request.files[field]
                 if file and file.filename != '' and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                    file.save(file_path)
-                    setattr(assignment, field, filename)
+                    link_imagen = subir_a_imgbb(file)
+                    if link_imagen:
+                        setattr(assignment, field, link_imagen)
+                    else:
+                        bp.abort(500, f'Error al subir la imagen {field} a ImgBB.')
+        # ==============================================================
 
         db.session.add(assignment)
         db.session.commit()
@@ -161,7 +192,7 @@ class AssignmentResource(Resource):
             except ValueError:
                 bp.abort(400, 'El número de casillero debe ser un número entero')
         if 'periodo' in data:
-            assignment.periodo = data['periodo'].strip()  # ← AÑADIDO: actualización del periodo
+            assignment.periodo = data['periodo'].strip()
         if 'pagado' in data:
             assignment.pagado = data['pagado'].strip()
         if 'en_uso' in data:
@@ -177,15 +208,18 @@ class AssignmentResource(Resource):
         if 'notas' in data:
             assignment.notas = data['notas'].strip()
 
-        # Manejo de nuevas fotos (solo si se sube una)
+        # === Manejo de fotos con ImgBB para el PUT ===
         for field in ['foto_credencial', 'foto_casillero']:
             if field in request.files:
                 file = request.files[field]
                 if file and file.filename != '' and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                    file.save(file_path)
-                    setattr(assignment, field, filename)
+                    link_imagen = subir_a_imgbb(file)
+                    
+                    if link_imagen:
+                        setattr(assignment, field, link_imagen)
+                    else:
+                        bp.abort(500, f'Error al subir la imagen {field} a ImgBB.')
+        # ==============================================
 
         db.session.commit()
         return assignment.to_dict()
