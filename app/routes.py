@@ -122,7 +122,7 @@ class AssignmentList(Resource):
                 if field in request.files:
                     file = request.files[field]
                     if file and file.filename != '' and allowed_file(file.filename):
-                        link_imagen = subir_a_imgbb(file)
+                        link_imagen = subir_a_nube(file)
                         if link_imagen:
                             setattr(assignment, field, link_imagen)
                         else:
@@ -178,7 +178,7 @@ class AssignmentResource(Resource):
                     if file and file.filename != '':
                         print(f"Procesando {field}: {file.filename}", flush=True)
                         if allowed_file(file.filename):
-                            link_imagen = subir_a_imgbb(file)
+                            link_imagen = subir_a_nube(file)
                             if link_imagen:
                                 setattr(assignment, field, link_imagen)
                             else:
