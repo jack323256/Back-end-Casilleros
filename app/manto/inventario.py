@@ -152,10 +152,15 @@ class InventarioResource(Resource):
 
             item.cantidad_total = nueva_total
 
-        # ---------- Manejo de nueva imagen ----------
+        # ---------- Manejo de imagen ----------
         if file and file.filename != '' and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            upload_folder = current_app.config['UPLOAD_FOLDER']
+            
+            # Crear la carpeta si no existe
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            file_path = os.path.join(upload_folder, filename)
             file.save(file_path)
             item.imagen = filename
 
